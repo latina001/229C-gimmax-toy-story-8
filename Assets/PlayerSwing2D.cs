@@ -10,27 +10,27 @@ public class PlayerSwing2D : MonoBehaviour
     public float startForwardSpeed = 7f;
     public float startJumpForce = 8f;
 
-    [Header("Swing")]
-    public float ropeDistance = 2f;
-    public float frequency = 2f;
+    [Header("Attach")]
+    public float frequency = 3f;
     public float damping = 0.5f;
 
     [Header("Boost")]
     public float releaseBoost = 1.5f;
 
+    [Header("Air Control 🔥")]
+    public float downForce = 15f;
+    public float forwardForce = 5f;
+
     bool hasStarted = false;
 
     SpringJoint2D joint;
-    Transform currentHook;
+    Rigidbody2D currentRope;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
 
-        // กันกลิ้ง
         rb.freezeRotation = true;
-
-        // ฟีลลื่น
         rb.linearDamping = 0f;
     }
 
@@ -40,7 +40,7 @@ public class PlayerSwing2D : MonoBehaviour
         bool hold = Keyboard.current.spaceKey.isPressed;
         bool release = Keyboard.current.spaceKey.wasReleasedThisFrame;
 
-        //  เริ่มเกม (พุ่งครั้งเดียว)
+        // 🎬 เริ่มเกม
         if (!hasStarted && press)
         {
             hasStarted = true;
@@ -50,44 +50,63 @@ public class PlayerSwing2D : MonoBehaviour
 
         if (!hasStarted) return;
 
-        //  โหน
         if (hold)
         {
             Attach();
+
+            // 🔥 กดค้าง = ดิ่ง + พุ่ง
+            ApplyAirControl();
         }
 
-        //  ปล่อย
         if (release)
         {
             Detach();
         }
     }
 
-    //  เกาะ
+    void ApplyAirControl()
+    {
+        // ⬇️ ดึงลง
+        rb.AddForce(Vector2.down * downForce);
+
+        // ➡️ ดันไปข้างหน้า
+        rb.AddForce(Vector2.right * forwardForce);
+    }
+
     void Attach()
     {
         if (joint != null) return;
-        if (currentHook == null) return;
+        if (currentRope == null) return;
+
+        // 🔥 ปลดล็อคเชือก
+        RopeLock ropeLock = currentRope.GetComponent<RopeLock>();
+        if (ropeLock != null)
+        {
+            ropeLock.Activate();
+        }
 
         joint = gameObject.AddComponent<SpringJoint2D>();
 
-        // ใช้ตำแหน่ง Hook จริง
-        joint.connectedBody = null;
-        joint.connectedAnchor = currentHook.position;
+        joint.connectedBody = currentRope;
+
+        Vector2 hitPoint = (Vector2)transform.position;
 
         joint.autoConfigureDistance = false;
-        joint.distance = ropeDistance;
+        joint.anchor = Vector2.zero;
+
+        joint.connectedAnchor = currentRope.transform.InverseTransformPoint(hitPoint);
+
+        joint.distance = 0.1f;
 
         joint.frequency = frequency;
         joint.dampingRatio = damping;
     }
 
-    //  หลุด + Boost
     void Detach()
     {
         if (joint != null)
         {
-            //  Boost เฉพาะแกน X (ให้พุ่งไปข้างหน้า)
+            // 🚀 Boost ตอนปล่อย
             Vector2 v = rb.linearVelocity;
             v.x *= releaseBoost;
             rb.linearVelocity = v;
@@ -96,12 +115,11 @@ public class PlayerSwing2D : MonoBehaviour
         }
     }
 
-    //  ตรวจจับ Hook
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Hook"))
         {
-            currentHook = other.transform;
+            currentRope = other.GetComponent<Rigidbody2D>();
         }
     }
 
@@ -109,8 +127,8 @@ public class PlayerSwing2D : MonoBehaviour
     {
         if (other.CompareTag("Hook"))
         {
-            if (currentHook == other.transform)
-                currentHook = null;
+            if (currentRope == other.GetComponent<Rigidbody2D>())
+                currentRope = null;
         }
     }
 }
