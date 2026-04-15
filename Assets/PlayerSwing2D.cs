@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement; // 🔥 เพิ่ม
 
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Collider2D))]
 public class PlayerSwing2D : MonoBehaviour
 {
     Rigidbody2D rb;
+    Collider2D playerCol;
 
     [Header("Start Movement")]
     public float startForwardSpeed = 7f;
@@ -25,10 +28,12 @@ public class PlayerSwing2D : MonoBehaviour
 
     SpringJoint2D joint;
     Rigidbody2D currentRope;
+    Collider2D currentRopeCol;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        playerCol = GetComponent<Collider2D>();
 
         rb.freezeRotation = true;
         rb.linearDamping = 0f;
@@ -39,6 +44,12 @@ public class PlayerSwing2D : MonoBehaviour
         bool press = Keyboard.current.spaceKey.wasPressedThisFrame;
         bool hold = Keyboard.current.spaceKey.isPressed;
         bool release = Keyboard.current.spaceKey.wasReleasedThisFrame;
+
+        // 🔥 ปุ่มรีเกม
+        if (Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            RestartGame();
+        }
 
         // 🎬 เริ่มเกม
         if (!hasStarted && press)
@@ -53,8 +64,6 @@ public class PlayerSwing2D : MonoBehaviour
         if (hold)
         {
             Attach();
-
-            // 🔥 กดค้าง = ดิ่ง + พุ่ง
             ApplyAirControl();
         }
 
@@ -64,13 +73,23 @@ public class PlayerSwing2D : MonoBehaviour
         }
     }
 
+    void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
     void ApplyAirControl()
     {
-        // ⬇️ ดึงลง
         rb.AddForce(Vector2.down * downForce);
-
-        // ➡️ ดันไปข้างหน้า
         rb.AddForce(Vector2.right * forwardForce);
+    }
+
+    void SetRopeTrigger(bool isTrigger)
+    {
+        if (currentRopeCol != null)
+        {
+            currentRopeCol.isTrigger = isTrigger;
+        }
     }
 
     void Attach()
@@ -78,7 +97,8 @@ public class PlayerSwing2D : MonoBehaviour
         if (joint != null) return;
         if (currentRope == null) return;
 
-        // 🔥 ปลดล็อคเชือก
+        SetRopeTrigger(false);
+
         RopeLock ropeLock = currentRope.GetComponent<RopeLock>();
         if (ropeLock != null)
         {
@@ -86,18 +106,15 @@ public class PlayerSwing2D : MonoBehaviour
         }
 
         joint = gameObject.AddComponent<SpringJoint2D>();
-
         joint.connectedBody = currentRope;
 
         Vector2 hitPoint = (Vector2)transform.position;
 
         joint.autoConfigureDistance = false;
         joint.anchor = Vector2.zero;
-
         joint.connectedAnchor = currentRope.transform.InverseTransformPoint(hitPoint);
 
         joint.distance = 0.1f;
-
         joint.frequency = frequency;
         joint.dampingRatio = damping;
     }
@@ -106,7 +123,8 @@ public class PlayerSwing2D : MonoBehaviour
     {
         if (joint != null)
         {
-            // 🚀 Boost ตอนปล่อย
+            SetRopeTrigger(true);
+
             Vector2 v = rb.linearVelocity;
             v.x *= releaseBoost;
             rb.linearVelocity = v;
@@ -120,6 +138,7 @@ public class PlayerSwing2D : MonoBehaviour
         if (other.CompareTag("Hook"))
         {
             currentRope = other.GetComponent<Rigidbody2D>();
+            currentRopeCol = other;
         }
     }
 
@@ -128,7 +147,10 @@ public class PlayerSwing2D : MonoBehaviour
         if (other.CompareTag("Hook"))
         {
             if (currentRope == other.GetComponent<Rigidbody2D>())
+            {
                 currentRope = null;
+                currentRopeCol = null;
+            }
         }
     }
 }
