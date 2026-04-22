@@ -400,7 +400,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: -0.94
+  near clip plane: 0.01
   far clip plane: 1000
   field of view: 34
   orthographic: 1
@@ -733,7 +733,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NewMonoBehaviourScript
   cam: {fileID: 519420028}
-  parallaxEffect: 1
+  parallaxEffect: 0.5
 --- !u!1 &1330369368
 GameObject:
   m_ObjectHideFlags: 0
@@ -935,7 +935,7 @@ MonoBehaviour:
   Lens:
     FieldOfView: 34
     OrthographicSize: 10
-    NearClipPlane: -0.94
+    NearClipPlane: 0.01
     FarClipPlane: 1000
     Dutch: 0
     ModeOverride: 0
@@ -998,7 +998,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NewMonoBehaviourScript
   cam: {fileID: 519420028}
-  parallaxEffect: 0.8
+  parallaxEffect: 1
 --- !u!212 &1603116341
 SpriteRenderer:
   serializedVersion: 2
