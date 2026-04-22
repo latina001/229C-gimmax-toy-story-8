@@ -42,5 +42,17 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: 1BG
+    uniqueID: 1550926489
+    locked: 0
+  - name: 2BGFactory
+    uniqueID: 2429177603
+    locked: 0
+  - name: Player
+    uniqueID: 3798626487
+    locked: 0
+  - name: Foreground
+    uniqueID: 3424843645
+    locked: 0
   m_RenderingLayers:
   - Default
